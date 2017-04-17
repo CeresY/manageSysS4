@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.common.system.dao.RoleDao">  
+	
+	 <insert id="addRole" parameterType="string" flushCache="true">
+        insert into usertype(typesign, typename) values(sys_guid(), #{0})
+	 </insert>
+	 
+	 <update id="editRole" parameterType="Role">
+	 	update usertype t set t.typename = #{name} where t.typesign = #{id}
+	 </update>
+	 
+	 <delete id="delRole" parameterType="string">
+	 	delete from usertype t where t.typesign = #{0}
+	 </delete>
+	 
+	 <delete id="delRoleMapAction" parameterType="string">
+	 	delete from actionmapping t where t.usertypesign = #{0}
+	 </delete>
+</mapper>
+
+
+
+
+
+
+
+
+
+

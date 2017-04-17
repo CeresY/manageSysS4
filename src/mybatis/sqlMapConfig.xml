@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC  
+    "-//mybatis.org//DTD Config 3.0//EN"  
+    "http://mybatis.org/dtd/mybatis-3-config.dtd">  
+<configuration>  
+
+	<typeAliases>
+		<!-- 在dao.xml文件不用写pojo的全路径，可以使用别名代替 -->
+		<typeAlias alias="UserInfo" type="com.common.system.pojo.UserInfo"/>
+		<typeAlias alias="Actions" type="com.common.system.pojo.Actions"/>
+		<typeAlias alias="Menus" type="com.common.system.pojo.Menus"/>
+		<typeAlias alias="UserType" type="com.common.system.pojo.UserType"/>
+		<typeAlias alias="UserAndType" type="com.common.system.pojo.UserAndType"/>
+		<typeAlias alias="Org" type="com.common.system.pojo.Organization"/>
+		<typeAlias alias="UserMapOrg" type="com.common.system.pojo.UserMapOrg"/>
+		<typeAlias alias="Dept" type="com.common.system.pojo.Dept"/>
+		<typeAlias alias="Role" type="com.common.system.pojo.Role"/>
+	</typeAliases>
+
+	<!-- 因为xml与dao放在同一包下，而且spring的MapperScannerConfigurer对dao包下进行了扫描，所以以下的代码可以不用写 -->
+    <!-- 
+    <mappers>  
+        <mapper resource="com/common/system/dao/UserLoginDao.xml"/>  
+    </mappers>  
+     -->
+</configuration>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.common.system.dao.OrgDao">  
+	
+	<!-- 插入机构 -->
+	 <insert id="addOrg" parameterType="Org" flushCache="true">
+	 	<!-- 插入序列 -->
+		<selectKey keyProperty="id" resultType="string" order="BEFORE">  
+            select seq_org.nextval from dual  
+        </selectKey>
+        insert into organ(id, orgname, parentid) values(#{id}, #{text}, #{parentid})
+	 </insert>
+	 
+	 <select id="findOrg" resultType="Org" >
+	 	select id, orgname text, parentid from organ
+	 </select>
+	 
+	 <delete id="delOrgByid" parameterType="java.lang.String">
+	 	delete from organ t where t.id=#{id}
+	 </delete>
+	 
+	 <update id="editOrg" parameterType="java.lang.String">
+	 	update organ t set t.orgname = #{1} where t.id = #{0}
+	 </update>
+	 
+	 <!-- 
+	 <select id="findOrg" resultMap="orgMap">
+	 	select id, orgname, parentid from organ
+	 </select>
+	 // 一对多的关系(机构的上下级)
+	 <resultMap type="Org" id="orgMap">
+	 	<id property="id" column="id"/>
+	 	<result property="text" column="orgname"/>
+	 	<collection property="children" column="id" select="findOrgChild"></collection>
+	 </resultMap>
+	 <select id="findOrgChild" resultType="Org" parameterType="java.lang.String">
+	 	select t.id, t.orgname text from organ t where t.parentid=#{0}
+	 </select>
+	  -->
+</mapper>
+
+
+
+
+
+
+
+
+
+

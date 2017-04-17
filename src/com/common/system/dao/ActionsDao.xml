@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.common.system.dao.ActionsDao">  
+	
+	 <!-- 查询所有权限与菜单栏关系 -->
+	 <select id="queryAllActions" resultMap="actionsMap">
+	 	select t1.id, t1.actionname, t1.menugroup, t2.menuname 
+		from actions t1, menus t2 where t1.menugroup=t2.id order by t1.menugroup asc, t1.id asc
+	 </select>
+	 
+	  <!-- 查询所有权限与菜单栏 -->
+	 <select id="findActionsUserType" resultMap="actionsMap">
+	 	select t1.id, t1.actionname, t1.menugroup, t2.menuname 
+		from actions t1, menus t2 where t1.menugroup=t2.id order by t1.menugroup asc, t1.id asc
+	 </select>
+	 
+	 <resultMap id="actionsMap" type="Actions">
+	 	<id property="actionid" column="id"/>
+	 	<result property="actionname" column="actionname"/>
+	 	<result property="menugroup" column="menugroup"/>
+	 	<result property="menuname" column="menuname"/>
+	 	
+	 </resultMap>
+	 
+	 <!-- 查询菜单栏 -->
+	 <select id="findAllMenus" resultType="Menus">
+	 	select id menusid, menuname from menus order by id asc
+	 </select>
+	 
+	 <!-- 修改“权限”与“菜单”映射 -->
+	 <update id="editActionMenu" parameterType="Actions">
+	 	update actions set menugroup=#{menugroup} where id=#{actionid}
+	 </update>
+	 
+	 <!-- 查询所有用户类型 -->
+	 <select id="findAllUsertype" resultType="UserType">
+	 	select * from usertype order by typesign asc
+	 </select>
+	 
+	 
+	 <!-- 根据用户类型查询：具有和不具有的权限 -->
+	 <select id="findActionAbled" parameterType="java.lang.String" resultMap="actionsMapping">
+	 	select temp1.menusid, temp1.menuname, temp1.actionid, temp1.actionname, 
+		       decode(temp2.typesign, '', '0', '1') isabled
+		from (
+		   select t1.id actionid,t1.actionname,t2.menuname,t2.id menusid from actions t1, menus t2 where t1.menugroup=t2.id
+		) temp1 left join (
+		   select t1.typesign,t1.typename,t2.actionid from usertype t1, actionmapping t2 
+		   where t1.typesign=t2.usertypesign and t1.typesign=#{0}
+		) temp2 on temp1.actionid=temp2.actionid order by temp1.menusid asc, temp1.actionid asc
+	 </select>
+	 <resultMap id="actionsMapping" type="Menus">
+	 	<result property="menusid" column="menusid"/>
+	 	<result property="menuname" column="menuname"/>
+	 	<collection property="actions" ofType="Actions">
+	 		<id property="actionid" column="actionid"/>
+	 		<result property="actionname" column="actionname"/>
+	 		<result property="isabled" column="isabled"/>
+	 	</collection>
+	 </resultMap>
+	  
+	  <!-- 删除权限与用户类型关系 -->
+	  <update id="delActionMapping">
+	  	 delete from actionmapping where actionid=#{0} and usertypesign=#{1}
+	  </update>
+	  <!-- 新增权限与用户类型关系 -->
+	  <insert id="addActionMapping">
+	  	insert into actionmapping(actionid, usertypesign) values(#{0}, #{1})
+	  </insert>
+</mapper>
+
+
+
+
+
+
+
+
+
+
