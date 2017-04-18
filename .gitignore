@@ -5,6 +5,7 @@
 *.pydevproject
 .project
 .metadata
+.mymetadata
 bin/
 tmp/
 *.tmp
@@ -26,4 +27,3 @@ WebRoot/WEB-INF/lib
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
-
