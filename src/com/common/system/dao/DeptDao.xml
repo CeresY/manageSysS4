@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.common.system.dao.DeptDao">  
+	
+	<!-- 插入 -->
+	 <insert id="addDept" parameterType="Dept" flushCache="true">
+	 	<!-- 插入序列 -->
+		<selectKey keyProperty="id" resultType="string" order="BEFORE">  
+            select seq_dept.nextval from dual  
+        </selectKey>
+        insert into dept(id, deptname, parentid) values(#{id}, #{name}, #{parentid})
+	 </insert>
+	 
+	 <!-- 查询岗位信息 -->
+	 <select id="findDept" resultType="Dept" >
+	 	select id, deptname name, parentid from dept
+	 </select>
+	 
+	 <!-- 查询岗位及相关信息 -->
+	 <select id="findDeptDetail" resultMap="DeptMap" >
+	 	select id, deptname, parentid from dept
+	 </select>
+	 <resultMap type="Dept" id="DeptMap">
+	 	<id property="id" column="id"/>
+	 	<result property="name" column="deptname"/>
+	 	<result property="parentid" column="parentid"/>
+	 	<result property="_parentId" column="parentid"/>
+	 	<association property="persons" column="id" select="deptCount"></association>
+	 </resultMap>
+	 
+	 <!-- 查询某岗位下的人数 -->
+	 <select id="deptCount" parameterType="java.lang.String" resultType="int">
+	 	select count(1) from user_dept t 
+	 	<where>
+	 		<if test="_parameter != null and _parameter != ''">
+	 			t.deptid = #{_parameter, jdbcType=VARCHAR}
+	 		</if>
+	 	</where>
+	 </select>
+	 
+	 <delete id="delDeptByid" parameterType="java.lang.String">
+	 	delete from dept t where t.id=#{id}
+	 </delete>
+	 
+	 <update id="editDept" parameterType="Dept">
+	 	update dept t set t.deptname = #{name} where t.id = #{id}
+	 </update>
+	 
+	 <!-- *******************映射关系********************** -->
+	 <!-- 插入"用户与岗位关系" -->
+	<insert id="addUserMapDept" parameterType="java.lang.String">
+	   insert into user_dept(userid, deptid) values (#{0}, #{1})  
+	</insert>
+	
+	<!-- 更新用户与岗位映射 -->
+	<update id="editUserMapDept" parameterType="Dept">
+		update user_dept t set t.deptid = #{id} where t.userid=#{userid}
+	</update>
+	
+	<!-- 重置岗位与人员映射, xxxx表示没有对应的岗位信息 -->
+	<update id="resetUserMapDept" parameterType="java.lang.String">
+		update user_dept t set t.deptid = 'xxxx' where t.deptid=#{0}
+	</update>
+	
+	<!-- 删除人员与映射关系 -->
+	<delete id="delUserMapDept" parameterType="java.lang.String">
+		delete from user_dept t where t.userid = #{0}
+	</delete>
+	
+	<!-- 根据用户id查询岗位名称 -->
+	<select id="findDeptByUser" parameterType="string" resultType="Dept">
+		select t2.id, t2.deptname name, t2.parentid from user_dept t1, dept t2 
+		where t1.deptid=t2.id and t1.userid = #{0}
+	</select>
+</mapper>
+
+
+
+
+
+
+
+
+
+

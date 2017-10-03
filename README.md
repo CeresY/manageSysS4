@@ -1,2 +1,2 @@
 # manageSysS4
-spring4+springmvc+easyui的简易人员系统
+简易人员管理系统springMVC+mybatis+easyui

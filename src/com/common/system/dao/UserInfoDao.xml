@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"   
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">  
+<mapper namespace="com.common.system.dao.UserInfoDao">  
+	 
+	<!-- ************************用户信息************************************ -->
+	<insert id="addUser" parameterType="UserInfo" flushCache="true">
+		<!-- 插入序列 -->
+		<selectKey keyProperty="userid" resultType="string" order="BEFORE">  
+            select seq_userinfo.nextval from dual  
+        </selectKey>
+	   INSERT INTO userinfo (id, username, chname, pwd, contact, createtime) VALUES 
+	   		(#{userid}, #{username}, #{chname}, '123456', #{contact, jdbcType=VARCHAR}, sysdate)  
+	</insert>  
+	
+	<!-- 查询所有用户 -->
+	<select id="queryAllUser" parameterType="java.util.Map" resultType="UserInfo">
+		select * from (
+		    select temp.*, rownum rn from (
+		       select t.id userid, t.username, t.chname, t.contact, t.createtime from userinfo t
+		       <where>
+					<if test="username != null and username != '' ">
+						t.username like CONCAT(CONCAT('%', #{username}),'%')
+					</if>
+					<if test="chname != null and chname != '' ">
+						and t.chname like CONCAT(CONCAT('%', #{chname}),'%')
+					</if>
+				</where>
+		      order by t.chname asc
+		    ) temp where rownum &lt;= #{end, jdbcType=INTEGER}
+		) temp2 where temp2.rn &gt;= #{begin, jdbcType=INTEGER}
+	</select>
+	
+	<!-- 所有用户数量 -->
+	<select id="queryAllCount" parameterType="UserInfo" resultType="java.lang.Integer">
+		select count(1) from userinfo t
+		<where>
+			<if test="username != null and username != '' ">
+				t.username like CONCAT(CONCAT('%', #{username}),'%')
+			</if>
+			<if test="chname != null and chname != '' ">
+				and t.chname like CONCAT(CONCAT('%', #{chname}),'%')
+			</if>
+		</where>
+	</select>
+	
+	<!-- 批量删除用户 -->	
+	<delete id="batchDeleteUser" parameterType="java.lang.String">
+		delete from userinfo where id in
+		<foreach collection="array" item="ele" index="i" open="(" separator="," close=")">
+			#{ele}
+		</foreach>
+	</delete>
+	<!-- 批量删除用户与类型映射 -->	
+	<delete id="batchDelUserAndType" parameterType="java.lang.String">
+		delete from usermapping where userid in
+		<foreach collection="array" item="ele" index="i" open="(" separator="," close=")">
+			#{ele}
+		</foreach>
+	</delete>
+	
+	<!-- 查询用户信息：【方式一】 -->
+	<!-- 根据userid查询用户信息 -->
+	<select id="queryUserByid" parameterType="java.lang.String" resultMap="userTypeMapping">
+		select t1.id userid, t1.username, t1.chname, t3.typesign, t3.typename
+		from userinfo t1, usermapping t2, usertype t3 
+		where t1.id=t2.userid and t2.usertypesign=t3.typesign
+		and t1.id=#{userid}
+	</select>
+	<!-- 用户与用户类型1:N的关系 -->
+	<resultMap id="userTypeMapping" type="UserInfo">
+		<id property="userid" column="userid"/>
+		<result property="username" column="username"/>
+		<result property="chname" column="chname"/>
+		<collection property="typeList" ofType="UserType">
+			<id property="typesign" column="typesign"/>
+			<result property="typename" column="typename"/>
+		</collection>
+	</resultMap>
+	
+	<!-- 查询用户信息：【方式二】2016-8-25 19:12:02 -->
+	<select id="getUserMapByUserid" parameterType="java.lang.String" resultMap="userMap2">
+		select t.id userid, t.username, t.chname, t.contact from userinfo t where t.id=#{userid}
+	</select>
+	<resultMap id="userMap2" type="UserInfo">
+		<id property="userid" column="userid"/>
+		<result property="username" column="username"/>
+		<result property="chname" column="chname"/>
+		<result property="contact" column="contact"/>
+		<!-- 用户与用户类型1:N的关系（实际上用户与用户类型为N:N关系，但是如果仅从一方角度看的话是1:N） -->
+		<collection property="utList" column="userid" select="getUserTypeMappingByUserid"></collection>
+		<!-- 用户与机构1:N的关系（同上） -->
+		<collection property="uoList" column="userid" select="findOrgByuserid"></collection>
+	</resultMap>
+	
+	<!-- 根据用户ID查询机构 -->
+	<select id="findOrgByuserid" resultType="UserMapOrg" parameterType="java.lang.String">
+		select tp1.userid, tp1.orgid, t2.orgname from (
+		  	select t.userid, t.orgid from user_org t where t.userid = #{userid}
+		) tp1 left join organ t2 on tp1.orgid = t2.id
+	</select>
+	
+	<!-- 更新用户信息 -->
+	<update id="editUserByid" parameterType="UserInfo">
+		update userinfo t set t.chname=#{chname}, t.contact=#{contact} where t.id=#{userid}
+	</update>
+	
+	<!-- ****************************权限******************************** -->
+	<!-- 权限（菜单栏） -->
+	<insert id="addActions" parameterType="Actions">
+		<!-- 插入序列 -->
+		<selectKey keyProperty="actionid" resultType="string" order="BEFORE">  
+            select seq_menus.nextval from dual  
+        </selectKey>
+		
+	   INSERT INTO actions (id, actionname, menugroup, actionsign, isview, url) VALUES 
+	   		(#{actionid}, #{actionname}, #{menugroup, jdbcType=VARCHAR}, #{actionsign}, #{isview}, #{url, jdbcType=VARCHAR)  
+	</insert>
+	
+	<!-- 查询权限(根据用户id查询) -->
+	<select id="queryActionsAll" resultType="Actions">
+		select 
+			t1.id actionid, t1.actionname, t1.menugroup, t1.actionsign, t1.isview, t1.url, t2.menuname 
+		from actions t1 inner join menus t2 on t1.menugroup=t2.id
+		order by t1.menugroup asc, t1.id asc
+	</select>
+	
+	<!-- **************************菜单分栏********************************** -->
+	<!-- 权限分栏 -->
+	<insert id="addMenus" parameterType="Menus">
+	   INSERT INTO menus  (id, menuname) VALUES 
+	   		(#{menusid},  #{menuname})  
+	</insert>
+	
+	<select id="queryAllMenu" resultType="Menus">
+		select t.id menusid, t.menuname from menus t order by t.id asc
+	</select>
+	
+	<!-- **************************用户类型********************************** -->
+	<!-- 新增用户类型 -->
+	<insert id="addUsertype" parameterType="UserType">
+	   insert into usertype(typesign, typename) values (#{typesign}, #{typename})  
+	</insert>
+	
+	<!-- 查询所有的用户类型 -->
+	<select id="queryAllUsertype" resultType="UserType">
+		select t.typesign, t.typename from usertype t
+	</select>
+	
+	<select id="usertypeMap" resultType="java.util.HashMap">
+		select t.typesign, t.typename from usertype t
+	</select>
+	
+	<select id="getUserTypeBysign" parameterType="java.lang.String" resultType="UserType">
+		select t.typesign, t.typename from usertype t where t.typesign=#{typesign}
+	</select>
+	
+	<!-- ********************用户信息与用户类型关系******************** -->
+	<!-- 插入"用户信息与用户类型关系" -->
+	<insert id="addUserAndType" parameterType="UserAndType">
+	   insert into usermapping(userid, usertypesign) values (#{userid}, #{usertypesign})  
+	</insert>
+	
+	<select id="getUserTypeMappingByUserid" parameterType="java.lang.String" resultType="UserAndType">
+		select tp1.userid, tp1.usertypesign, t2.typename usertypename from (
+		    select t.userid, t.usertypesign from usermapping t where t.userid = #{userid}
+		) tp1 left join usertype t2 on tp1.usertypesign = t2.typesign
+	</select>
+	
+	<!-- 修改用户与用户类型关系 -->
+	<update id="editUserAndType" parameterType="UserAndType">
+		update usermapping set usertypesign=#{usertypesign} where userid=#{userid}
+	</update>
+	
+	<!-- ********************用户与机构关系******************** -->
+	<!-- 插入"用户与机构关系" -->
+	<insert id="addUserOrgMap" parameterType="UserInfo">
+	   insert into user_org(userid, orgid) values (#{userid}, #{org})  
+	</insert>
+	
+	<!-- 更新用户与机构映射 -->
+	<update id="editUserMapOrg" parameterType="UserMapOrg">
+		update user_org t set t.orgid = #{orgid} where t.userid=#{userid}
+	</update>
+	
+</mapper>
